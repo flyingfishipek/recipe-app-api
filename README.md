@@ -1,10 +1,12 @@
 # recipe-app-api
 
-## Create Dockerfile
+## 1. Create new django project
+
+### 1.1. Create Dockerfile
 
 1. Create `Dockerfile`
 
-```
+```Dockerfile
 FROM python:3.7-alpine
 MAINTAINER flyingfishipek@gmail.com
 
@@ -37,11 +39,11 @@ docker login
 docker build .
 ```
 
-## Configure Docker Compose
+### 1.2. onfigure Docker Compose
 
 1. Create `docker-compose.yml` file
 
-```
+```yml
 version: "3"
 
 services:
@@ -62,10 +64,49 @@ services:
 docker-compose build
 ```
 
-## Initiate a Django project in container
+### 1.3. Initiate a Django project in container
 
-1. Run the `app` service and execute command to start a Django project in /app folder (recall that /app is also `WORKDIR`)
+1. Run the `app` service and execute command to start a Django project in `/app` folder (recall that `/app` is also `WORKDIR`)
 
 ```shell
 docker-compose run app sh -c "django-admin.py startproject app ."
+```
+## 2. Setup Automation
+
+1. Integrate GitHub account & repositories with Travis CI.
+
+2. Add flake8 linting tool to `requirement.txt`
+
+```
+Django>=2.1.3,<=2.2.0
+djangorestframework>=3.9.0,<=3.10.0
+
+flake8>=3.9.2,<=3.10.0
+```
+
+and create flake8 configuration file in `app` folder `.flake8`:
+
+```
+[flake8]
+exclude =
+  migrations,
+  __pycache__,
+  manage.py,
+  settings.py
+```
+
+3. Create `.travis.yml` file. Everytime we push a change to GitHub, Travis is going to spin up a python server (running python 3.6), going to make docker service enabled, use pip to install docker-compose and finally run our script.
+
+```yml
+language: python
+python:
+  - "3.6"
+
+services:
+  - docker
+
+before_script: pip install docker-compose
+
+scripts:
+  - docker-compose run app sh -c "python manage.py test && flake8"
 ```
