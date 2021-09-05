@@ -39,7 +39,7 @@ docker login
 docker build .
 ```
 
-### 1.2. onfigure Docker Compose
+### 1.2. Configure Docker Compose
 
 1. Create `docker-compose.yml` file
 
@@ -73,7 +73,7 @@ docker-compose run app sh -c "django-admin.py startproject app ."
 ```
 ## 2. Setup Automation
 
-1. Integrate GitHub account & repositories with Travis CI.
+1. Integrate GitHub account & repositories with Travis CI. Add DockerHub credentials to Travis-CI project (Settings > Environment Variables > add `DOCKER_PASSWORD` and `DOCKER_USERNAME`).
 
 2. Add flake8 linting tool to `requirement.txt`
 
@@ -95,7 +95,7 @@ exclude =
   settings.py
 ```
 
-3. Create `.travis.yml` file. Everytime we push a change to GitHub, Travis is going to spin up a python server (running python 3.6), going to make docker service enabled, use pip to install docker-compose and finally run our script.
+3. Create `.travis.yml` file. Everytime we push a change to GitHub, Travis is going to spin up a python server (running python 3.6), going to start docker service, login to DockerHub, build our Dockerfile automatically, use pip to install docker-compose and finally run our script to run tests (not written any tests yet) and linting check.
 
 ```yml
 language: python
@@ -105,8 +105,13 @@ python:
 services:
   - docker
 
+before_install:
+  - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
+
 before_script: pip install docker-compose
 
 scripts:
   - docker-compose run app sh -c "python manage.py test && flake8"
 ```
+
+After commiting and pushing the changes to GitHub a new [job](https://app.travis-ci.com/github/flyingfishipek/recipe-app-api/jobs/535625826#L2)  should be started in Travis CI.
